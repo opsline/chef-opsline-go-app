@@ -1,0 +1,25 @@
+description "<%= @app_name %>"
+
+# /etc/init/workers.conf - manage a set of workers
+#
+# Use "stop <%= @app_name %>" to stop all worker instances.
+# Use "start <%= @app_name %>" to start all instances.
+# Use "restart <%= @app_name %>" to restart all instances.
+#
+
+start on runlevel [234]
+stop on runlevel [!234]
+
+env NUM_WORKERS=<%= @number_of_workers %>
+
+pre-start script
+  for i in $(seq 1 $NUM_WORKERS); do
+    start <%= @app_name %>-worker index=$i
+  done
+end script
+
+post-stop script
+  for i in $(seq 1 $NUM_WORKERS); do
+    stop <%= @app_name %>-worker index=$i || true
+  done
+end script

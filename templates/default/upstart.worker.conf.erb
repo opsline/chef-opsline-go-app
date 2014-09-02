@@ -1,0 +1,32 @@
+description "<%= @app_name %> worker"
+
+# See <%= @app_name %>.conf for how to manage all worker instances at once.
+#
+#   sudo start <%= @app_name %>-worker index=1
+#   sudo stop <%= @app_name %>-worker index=1
+#   sudo status <%= @app_name %>-worker index=1
+#
+# or use the service command:
+#   sudo service <%= @app_name %>-worker {start,stop,restart,status} index=1
+#
+
+# no "start on", we don't want to automatically start
+stop on (stopping <%= @app_name %> or runlevel [!234])
+
+setuid <%= @user %>
+setgid <%= @group %>
+
+limit core unlimited unlimited
+respawn
+respawn limit 3 30
+
+instance $index
+
+env APP_DIR=<%= @deploy_to %>
+
+script
+exec /usr/bin/envdir $APP_DIR/env /bin/bash -l <<'EOF'
+  cd $APP_DIR/current
+  exec go run <%= @executable %> >>$APP_DIR/shared/log/upstart-${index}.log 2>&1
+EOF
+end script

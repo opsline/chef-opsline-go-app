@@ -1,0 +1,21 @@
+description "<%= @app_name %>"
+
+start on runlevel [234]
+stop on runlevel [!234]
+
+setuid <%= @user %>
+setgid <%= @group %>
+
+env ENV_DIR=/etc/<%= @app_name %>.d/env
+
+respawn
+respawn limit 3 30
+
+env APP_DIR=<%= @deploy_to %>
+
+script
+exec /usr/bin/envdir $APP_DIR/env /bin/bash -l <<'EOF'
+  cd $APP_DIR/current
+  exec go run <%= @executable %> >>$APP_DIR/shared/log/upstart.log 2>&1
+EOF
+end script

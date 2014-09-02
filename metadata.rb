@@ -1,0 +1,10 @@
+name             'opsline-go-app'
+maintainer       'Radek Wierzbicki'
+maintainer_email 'radek@opsline.com'
+license          'All rights reserved'
+description      'Installs/Configures opsline-go-app'
+long_description 'Installs/Configures opsline-go-app'
+version          '0.1.0'
+
+depends 'artifact'
+depends 'logrotate'
