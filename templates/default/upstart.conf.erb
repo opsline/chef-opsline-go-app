@@ -16,6 +16,6 @@ env APP_DIR=<%= @deploy_to %>
 script
 exec /usr/bin/envdir $APP_DIR/env /bin/bash -l <<'EOF'
   cd $APP_DIR/current
-  exec go run <%= @executable %> >>$APP_DIR/shared/log/upstart.log 2>&1
+  exec <%= @executable %> >>$APP_DIR/shared/log/upstart.log 2>&1
 EOF
 end script

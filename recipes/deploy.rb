@@ -157,8 +157,8 @@ node['opsline-go-app']['apps'].each do |app_id|
           notifies :restart, "service[#{app_name}]", :delayed
           variables({
             :app_name => app_name,
-            :user => app_data['owner'],
-            :group => app_data['group'],
+            :user => node['opsline-go-app']['owner'],
+            :group => node['opsline-go-app']['owner'],
             :deploy_to => app_data['deploy_to'],
             :executable => app_data['executable']
           })
@@ -194,8 +194,8 @@ node['opsline-go-app']['apps'].each do |app_id|
           notifies :restart, "service[#{app_name}]", :delayed
           variables({
             :app_name => app_name,
-            :user => app_data['owner'],
-            :group => app_data['group'],
+            :user => node['opsline-go-app']['owner'],
+            :group => node['opsline-go-app']['owner'],
             :deploy_to => app_data['deploy_to'],
             :executable => app_data['executable']
           })
@@ -211,8 +211,8 @@ node['opsline-go-app']['apps'].each do |app_id|
           notifies :restart, "service[#{app_name}]", :delayed
           variables({
             :app_name => app_name,
-            :user => app_data['owner'],
-            :group => app_data['group'],
+            :user => node['opsline-go-app']['owner'],
+            :group => node['opsline-go-app']['owner'],
             :deploy_to => app_data['deploy_to'],
             :number_of_workers => app_data['container_parameters']['number_of_workers']
           })
