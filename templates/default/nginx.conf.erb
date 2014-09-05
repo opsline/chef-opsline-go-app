@@ -1,0 +1,23 @@
+upstream <%= @app_name %> {
+  <% @app_data['container_parameters']['upstream_ports'].each do |por| -%>
+  server localhost:<%= por %> fail_timeout=0;
+  <% end -%>
+  <% @app_data['container_parameters']['upstream_sockets'].each do |sock| -%>
+  server unix:<%= sock %> fail_timeout=0;
+  <% end -%>
+}
+
+server {
+  listen <%= @app_data['container_parameters']['frontend_port'] %>;
+
+  server_name <%= @server_name %>;
+
+  access_log /var/log/nginx/<%= @app_name %>_access.log;
+  error_log /var/log/nginx/<%= @app_name %>_error.log;
+
+  root <%= @app_data['deploy_to'] %>/current/public/;
+
+  location / {
+    proxy_pass http://<%= @app_name %>;
+  }
+}

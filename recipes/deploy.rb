@@ -5,10 +5,22 @@ end
 # install all configured go apps
 node['opsline-go-app']['apps'].each do |app_id|
 
+  # read app data bag item
   if node['opsline-go-app']['encrypted_databag']
     app_data = Chef::EncryptedDataBagItem.load(node['opsline-go-app']['databag'], app_id).to_hash
   else
     app_data = data_bag_item(node['opsline-go-app']['databag'], app_id)
+  end
+
+  # read inherited data bag item
+  if app_data.has_key?('inherits')
+    if node['opsline-go-app']['encrypted_databag']
+      inherited_data = Chef::EncryptedDataBagItem.load(node['opsline-go-app']['databag'], app_data['inherits']).to_hash
+    else
+      inherited_data = data_bag_item(node['opsline-go-app']['databag'], app_data['inherits'])
+    end
+  else
+    inherited_data = nil
   end
 
   # get app name
@@ -20,6 +32,37 @@ node['opsline-go-app']['apps'].each do |app_id|
 
   # skip non-go apps
   next unless app_data['type'] == 'go'
+
+  # initial environment variables hash
+  app_data['app_env'] = {}
+  app_data['app_env']['HOME'] = "/home/#{node['opsline-go-app']['owner']}"
+  app_data['app_env']['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+  app_data['app_env']['GOPATH'] = "#{app_data['deploy_to']}/current"
+
+  # merge inherited environment
+  unless inherited_data.nil?
+    if inherited_data.has_key?('environment')
+      app_data['app_env'].merge!(get_env_value(inherited_data['environment']))
+    end
+    if inherited_data.has_key?('version')
+      app_data['version'] = inherited_data['version']
+    end
+    if inherited_data.has_key?('deploy_to')
+      app_data['deploy_to'] = inherited_data['deploy_to']
+    end
+    if inherited_data.has_key?('package_type')
+      app_data['package_type'] = inherited_data['package_type']
+    end
+    if inherited_data.has_key?('artifact_name')
+      app_data['artifact_name'] = inherited_data['artifact_name']
+    end
+    if inherited_data.has_key?('artifact_location')
+      app_data['artifact_location'] = inherited_data['artifact_location']
+    end
+    if inherited_data.has_key?('jenkins_job_name')
+      app_data['jenkins_job_name'] = inherited_data['jenkins_job_name']
+    end
+  end
 
   # set default parameters if not provided
   unless app_data.has_key?('deploy_to')
@@ -48,23 +91,17 @@ node['opsline-go-app']['apps'].each do |app_id|
     app_data['container_parameters'] = {}
   end
 
+  # merge environment from data bag
+  if app_data.has_key?('environment')
+    app_data['app_env'].merge!(get_env_value(app_data['environment']))
+  end
+
   # create app directory
   directory app_data['deploy_to'] do
     action :create
     owner node['opsline-go-app']['owner']
     group node['opsline-go-app']['owner']
     mode 0755
-  end
-
-  # environment variables hash
-  app_data['app_env'] = {}
-  app_data['app_env']['HOME'] = "/home/#{node['opsline-go-app']['owner']}"
-  app_data['app_env']['PATH'] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-  app_data['app_env']['GOPATH'] = "#{app_data['deploy_to']}/current"
-
-  # merge environment from data bag (if there)
-  if app_data.has_key?('environment')
-    app_data['app_env'].merge!(get_env_value(app_data['environment']))
   end
 
   # install pre-requisite packages
@@ -138,6 +175,9 @@ node['opsline-go-app']['apps'].each do |app_id|
 
       # PROCESS
       if app_data['container'] == 'process'
+        unless app_data['container_parameters'].has_key?('frontend')
+          app_data['container_parameters']['frontend'] = 'none'
+        end
 
         env_dir app_data do
           deploy_to app_data['deploy_to']
@@ -168,12 +208,35 @@ node['opsline-go-app']['apps'].each do |app_id|
           action :nothing
         end
         services_to_restart << [app_name, Chef::Provider::Service::Upstart]
+
+        if app_data['container_parameters']['frontend'] == 'nginx'
+          if app_data['container_parameters'].has_key?('frontend_ports')
+            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['frontend_ports']
+          else
+            app_data['container_parameters']['upstream_ports'] = []
+          end
+          if app_data['container_parameters'].has_key?('frontend_sockets')
+            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['frontend_sockets']
+          else
+            app_data['container_parameters']['upstream_sockets'] = []
+          end
+
+          services_to_restart << ['nginx', Chef::Provider::Service::Init]
+
+          nginx_app_config "nginx config for #{app_name}" do
+            app_name app_name
+            app_data app_data
+          end
+        end
       end
 
       # WORKER
       if app_data['container'] == 'worker'
         unless app_data['container_parameters'].has_key?('number_of_workers')
           app_data['container_parameters']['number_of_workers'] = 4
+        end
+        unless app_data['container_parameters'].has_key?('frontend')
+          app_data['container_parameters']['frontend'] = 'none'
         end
 
         env_dir app_data do
@@ -222,6 +285,26 @@ node['opsline-go-app']['apps'].each do |app_id|
           action :nothing
         end
         services_to_restart << [app_name, Chef::Provider::Service::Upstart]
+
+        if app_data['container_parameters']['frontend'] == 'nginx'
+          if app_data['container_parameters'].has_key?('frontend_ports')
+            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['frontend_ports']
+          else
+            app_data['container_parameters']['upstream_ports'] = []
+          end
+          if app_data['container_parameters'].has_key?('frontend_sockets')
+            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['frontend_sockets']
+          else
+            app_data['container_parameters']['upstream_sockets'] = []
+          end
+
+          services_to_restart << ['nginx', Chef::Provider::Service::Init]
+
+          nginx_app_config "nginx config for #{app_name}" do
+            app_name app_name
+            app_data app_data
+          end
+        end
       end
 
     }
