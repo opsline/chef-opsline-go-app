@@ -30,9 +30,6 @@ node['opsline-go-app']['apps'].each do |app_id|
     app_name = app_id
   end
 
-  # skip non-go apps
-  next unless app_data['type'] == 'go'
-
   # initial environment variables hash
   app_data['app_env'] = {}
   app_data['app_env']['HOME'] = "/home/#{node['opsline-go-app']['owner']}"
@@ -46,6 +43,9 @@ node['opsline-go-app']['apps'].each do |app_id|
     end
     if inherited_data.has_key?('version')
       app_data['version'] = inherited_data['version']
+    end
+    if inherited_data.has_key?('type')
+      app_data['type'] = inherited_data['type']
     end
     if inherited_data.has_key?('deploy_to')
       app_data['deploy_to'] = inherited_data['deploy_to']
@@ -63,6 +63,9 @@ node['opsline-go-app']['apps'].each do |app_id|
       app_data['jenkins_job_name'] = inherited_data['jenkins_job_name']
     end
   end
+
+  # skip non-go apps
+  next unless app_data['type'] == 'go'
 
   # set default parameters if not provided
   unless app_data.has_key?('deploy_to')
