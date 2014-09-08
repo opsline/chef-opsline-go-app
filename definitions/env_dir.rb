@@ -11,17 +11,20 @@ define :env_dir, :deploy_to => nil, :variables => {}, :owner => 'root', :group =
   end
 
   configured_vars = params[:variables].keys
-  existing_vars = Dir.entries(env_d).select {|f| !File.directory? f}
 
-  # remove files that should not exist
-  (existing_vars - configured_vars).each do |var|
-    file var do
-      path "#{env_d}/#{var}"
-      owner params[:owner]
-      group params[:group]
-      action :delete
-      mode 0644
-      notifies params[:notifies][0], params[:notifies][1]
+  if File.directory?(env_d)
+    existing_vars = Dir.entries(env_d).select {|f| !File.directory? f}
+
+    # remove files that should not exist
+    (existing_vars - configured_vars).each do |var|
+      file var do
+        path "#{env_d}/#{var}"
+        owner params[:owner]
+        group params[:group]
+        action :delete
+        mode 0644
+        notifies params[:notifies][0], params[:notifies][1]
+      end
     end
   end
 
