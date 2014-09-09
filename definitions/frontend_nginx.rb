@@ -1,4 +1,4 @@
-define :nginx_app_config, :app_name => nil, :app_data => {}, :template => 'nginx.conf.erb', :cookbook => 'opsline-rails-app', :action => :create do
+define :nginx_app_config, :app_name => nil, :app_data => {}, :template => 'nginx.conf.erb', :cookbook => 'opsline-go-app', :action => :create do
 
   app_name = params[:app_name]
   app_data = params[:app_data]
@@ -9,7 +9,7 @@ define :nginx_app_config, :app_name => nil, :app_data => {}, :template => 'nginx
 
   template "/etc/nginx/sites-available/#{app_name}" do
     source params[:template]
-    cookbook 'opsline-rails-app'
+    cookbook params[:cookbook]
     owner 'root'
     group 'root'
     mode 0644

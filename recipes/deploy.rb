@@ -213,13 +213,16 @@ node['opsline-go-app']['apps'].each do |app_id|
         services_to_restart << [app_name, Chef::Provider::Service::Upstart]
 
         if app_data['container_parameters']['frontend'] == 'nginx'
-          if app_data['container_parameters'].has_key?('frontend_ports')
-            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['frontend_ports']
+          unless app_data['container_parameters'].has_key?('frontend_port')
+            app_data['container_parameters']['frontend_port'] = '8080'
+          end
+          if app_data['container_parameters'].has_key?('app_ports')
+            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['app_ports']
           else
             app_data['container_parameters']['upstream_ports'] = []
           end
-          if app_data['container_parameters'].has_key?('frontend_sockets')
-            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['frontend_sockets']
+          if app_data['container_parameters'].has_key?('app_sockets')
+            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['app_sockets']
           else
             app_data['container_parameters']['upstream_sockets'] = []
           end
@@ -290,13 +293,16 @@ node['opsline-go-app']['apps'].each do |app_id|
         services_to_restart << [app_name, Chef::Provider::Service::Upstart]
 
         if app_data['container_parameters']['frontend'] == 'nginx'
-          if app_data['container_parameters'].has_key?('frontend_ports')
-            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['frontend_ports']
+          unless app_data['container_parameters'].has_key?('frontend_port')
+            app_data['container_parameters']['frontend_port'] = '8080'
+          end
+          if app_data['container_parameters'].has_key?('app_ports')
+            app_data['container_parameters']['upstream_ports'] = app_data['container_parameters']['app_ports']
           else
             app_data['container_parameters']['upstream_ports'] = []
           end
-          if app_data['container_parameters'].has_key?('frontend_sockets')
-            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['frontend_sockets']
+          if app_data['container_parameters'].has_key?('app_sockets')
+            app_data['container_parameters']['upstream_sockets'] = app_data['container_parameters']['app_sockets']
           else
             app_data['container_parameters']['upstream_sockets'] = []
           end
