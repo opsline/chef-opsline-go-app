@@ -25,8 +25,17 @@ instance $index
 env APP_DIR=<%= @deploy_to %>
 
 script
-exec /usr/bin/envdir $APP_DIR/env /bin/bash -l <<'EOF'
+exec /usr/bin/envdir $APP_DIR/env /bin/bash -l <<EOF
   cd $APP_DIR/current
+  export WORKER_NAME="$(hostname -s).worker.${index}"
+  echo $$ >$APP_DIR/shared/pids/<%= @app_name %>-${index}.pid
   exec go run <%= @executable %> >>$APP_DIR/shared/log/upstart-${index}.log 2>&1
 EOF
+end script
+
+post-stop script
+  if [ -f $APP_DIR/shared/pids/<%= @app_name %>-${index}.pid ]; then
+    kill $(cat $APP_DIR/shared/pids/<%= @app_name %>-${index}.pid) 2>/dev/null || true
+    rm -f $APP_DIR/shared/pids/<%= @app_name %>-${index}.pid 2>/dev/null || true
+  fi
 end script
