@@ -1,5 +1,9 @@
 # CHANGELOG for opsline-mysql
 
+## 0.2.3
+* updating README.md
+* applying Apache License
+
 ## 0.2.2
 * adding WORKER_NAME variable for workers
 * upstart will write a PID file
